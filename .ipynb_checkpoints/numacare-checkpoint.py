@@ -1,6 +1,10 @@
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from sqlalchemy import create_engine
 import streamlit as st
 
 # -----------------------------------------------------------------------------
@@ -13,18 +17,53 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# -----------------------------------------------------------------------------
+# DATABASE CONNECTION & LIVE DATA LOADING
+# -----------------------------------------------------------------------------
+env_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
-# -----------------------------------------------------------------------------
-# DATA LOADING & PREPROCESSING
-# -----------------------------------------------------------------------------
-@st.cache_data
+
+def get_db_url():
+    # Works locally via .env OR on Streamlit Cloud via st.secrets
+    user = os.getenv("DB_USER") or st.secrets.get("DB_USER")
+    password = os.getenv("DB_PASS") or st.secrets.get("DB_PASS")
+    host = os.getenv("DB_HOST") or st.secrets.get("DB_HOST")
+    port = os.getenv("DB_PORT") or st.secrets.get("DB_PORT", "6543")
+    dbname = os.getenv("DB_NAME") or st.secrets.get("DB_NAME", "postgres")
+
+    if not password:
+        raise ValueError("Database credentials missing!")
+
+    return f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
+
+
+@st.cache_data(ttl=3600)  # Caches PostgreSQL query results for 1 hour
 def load_data():
-    # Load dataset
-    try:
-        df = pd.read_csv("dialysis_billing_data.csv")
-    except FileNotFoundError:
-        df = pd.read_csv("dialysis_transactions.csv")
+    db_url = get_db_url()
+    engine = create_engine(db_url)
 
+    query = """
+        SELECT 
+            "Invoice_No",
+            "Trans_Date",
+            "Service_Centre",
+            "Patient_ID",
+            "Patient_Name",
+            "Medical_Aid",
+            "Category",
+            "Claim_Code",
+            "Item_Code",
+            "Description",
+            "Quantity",
+            "Amount_Excl",
+            "Cost",
+            "Is_Reversal"
+        FROM billing_data
+        ORDER BY "Trans_Date" ASC
+    """
+
+    df = pd.read_sql(query, engine)
     df["Trans_Date"] = pd.to_datetime(df["Trans_Date"])
     df["Year"] = df["Trans_Date"].dt.year
     df["Month_Num"] = df["Trans_Date"].dt.month
@@ -36,7 +75,8 @@ def load_data():
     return df
 
 
-df = load_data()
+with st.spinner("Connecting securely to Supabase PostgreSQL Database..."):
+    df = load_data()
 
 # Global Month Ordering
 months_order = [
@@ -53,7 +93,6 @@ months_order = [
     "Nov",
     "Dec",
 ]
-
 # -----------------------------------------------------------------------------
 # SIDEBAR FILTERS
 # -----------------------------------------------------------------------------
