@@ -34,7 +34,7 @@ with engine.connect() as conn:
     )
     result = conn.execute(state_query).fetchone()
     last_date = (
-        pd.to_datetime(result[0]) if result[0] else pd.to_datetime("2026-07-31")
+        pd.to_datetime(result[0]) if result[0] else pd.to_datetime("2026-06-27")
     )
     last_invoice = int(result[1]) if result[1] else 100000
 
@@ -74,6 +74,7 @@ print(f"Last Recorded Date in DB: {last_date.date()}")
 print(f"Last Invoice Number in DB: {last_invoice}")
 print(f"Active Patient Pool: {len(existing_patients_df)} static patients")
 print(f"Extracted Stock Items from History: {len(stock_catalog_df)} items")
+print(f"Extracted Procedures from History: {len(proc_catalog_df)} items")
 
 # --- 3. DETERMINE GENERATION WINDOW ---
 start_date = last_date + timedelta(days=1)
@@ -93,6 +94,9 @@ patient_pool = existing_patients_df.to_dict("records")
 stock_items = stock_catalog_df.to_dict("records")
 procedures = proc_catalog_df.to_dict("records")
 
+if not procedures:
+    raise ValueError("No procedure records found in database historical catalog.")
+
 new_records = []
 current_invoice = last_invoice + 1
 date_range = pd.date_range(start=start_date, end=target_end)
@@ -107,8 +111,17 @@ for single_date in date_range:
     for _ in range(daily_sessions):
         patient = random.choice(patient_pool)
         
-        # Pick procedure (mostly Chronic)
-        proc = random.choices(procedures, weights=[0.90, 0.10])[0] if len(procedures) > 1 else procedures[0]
+        # Dynamic weighting for procedures
+        if len(procedures) > 1:
+            weights = []
+            for p in procedures:
+                if str(p.get("Category", "")).strip().lower() == "chronic":
+                    weights.append(0.90)
+                else:
+                    weights.append(0.10 / (len(procedures) - 1))
+            proc = random.choices(procedures, weights=weights)[0]
+        else:
+            proc = procedures[0]
 
         # Reversal modeling (~4% overall)
         reversal_probability = 0.07 if patient["Medical_Aid"] == "PSEMAS" else 0.02
