@@ -31,7 +31,7 @@ NumaCare bridges clinical operations and billing analytics. Designed around a st
 
 ## Repository Structure
 
-``text
+``
 numacare/
 ├── .github/
 │   └── workflows/
@@ -41,49 +41,13 @@ numacare/
 ├── requirements.txt                # Production dependencies for Streamlit Cloud
 ├── .env.example                    # Template for database credentials
 └── README.md                       # Project documentation
-⚙️ Local Development Setup
-1. Clone the Repository
-Bash
-git clone [https://github.com/Nooj86/numacare.git](https://github.com/Nooj86/numacare.git)
-cd numacare
-2. Set Up Virtual Environment & Dependencies
-Bash
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
 
-pip install -r requirements.txt
-3. Configure Database Secrets (.env)
-Create a .env file in the project root:
-
-Code snippet
-DB_USER=postgres.[YOUR_SUPABASE_PROJECT_REF]
-DB_PASS=YOUR_SUPABASE_DATABASE_PASSWORD
-DB_HOST=aws-1-eu-west-1.pooler.supabase.com
-DB_PORT=6543
-DB_NAME=postgres
-4. Run the Dashboard Locally
-Bash
-streamlit run app.py
-🚀 Data Pipeline & Automation
-Incremental monthly data is generated using append_monthly_data.py.
-
-Key Ingestion Rules:
-State Preservation: Queries MAX("Trans_Date") and MAX("Invoice_No") to seamlessly resume billing sequence numbers without duplication.
-
-Catalog Consistency: Dynamically extracts existing Service_Centre locations, procedure codes, and stock consumable descriptions from historical records to avoid phantom metrics.
-
-Cohort Integrity: Preserves the 150 static patient IDs (PAT-001 through PAT-150) to maintain true longitudinal retention statistics.
-
-Running Data Appender Manually:
-Bash
-python append_monthly_data.py
 GitHub Actions Workflow:
+
 The ingestion workflow is defined in .github/workflows/monthly_ingestion.yml. It runs automatically at 00:00 UTC on the 1st of every month to capture the full prior month's data, and can also be triggered manually via the GitHub Actions UI using workflow_dispatch.
 
-🔒 Security & Database Best Practices
+Security & Database Best Practices:
+
 Row Level Security (RLS): Enabled on public.billing_data in Supabase to restrict unauthenticated PostgREST API access while allowing direct SQLAlchemy backend access over SSL.
 
 Secret Isolation: API keys and connection strings are excluded from source control using .gitignore and injected via Streamlit Secrets (st.secrets) in production and GitHub Repository Secrets in CI/CD.
