@@ -2,10 +2,10 @@ name: Monthly Dialysis Data Ingestion
 
 on:
   schedule:
-    # Trigger on the 1st of every month at 00:00 UTC
-    - cron: '0 0 1 * *'
-  workflow_dispatch: # Allows manual trigger from GitHub UI for testing
-
+    # Runs at 23:00 UTC on the last day of every month
+    - cron: '0 23 28-31 * *'
+  workflow_dispatch: # Enables the "Run workflow" manual button on GitHub
+  
 jobs:
   run-ingestion:
     runs-on: ubuntu-latest
