@@ -8,7 +8,7 @@ Powered by **Streamlit**, **Supabase PostgreSQL**, **SQLAlchemy**, and **GitHub 
 
 ## Project Overview
 
-NumaCare bridges clinical operations and billing analytics. Designed around a static cohort model of 150 anonymized renal patients, the platform models realistic longitudinal treatment patterns, procedure-to-consumable bundling, and regional claim reversal dynamics (e.g., PSEMAS / State Health Fund leakage).
+NumaCare bridges clinical operations and billing analytics. Designed around a static cohort model of 150 anonymized renal patients, the platform models realistic treatment patterns, procedure-to-consumable bundling, and regional claim reversal dynamics.
 
 ### **Key Features**
 * **Live Supabase PostgreSQL Backend:** Replaced static CSV mocks with a high-performance relational database with Row Level Security (RLS) enabled.
@@ -28,19 +28,6 @@ NumaCare bridges clinical operations and billing analytics. Designed around a st
 * **Environment Management:** `python-dotenv`
 
 ---
-
-## Repository Structure
-
-``
-numacare/
-├── .github/
-│   └── workflows/
-│       └── monthly_ingestion.yml   # Scheduled GitHub Action (runs on 1st of month)
-├── app.py / numacare.py            # Streamlit dashboard entry point
-├── append_monthly_data.py          # State-aware incremental data ingestion engine
-├── requirements.txt                # Production dependencies for Streamlit Cloud
-├── .env.example                    # Template for database credentials
-└── README.md                       # Project documentation
 
 GitHub Actions Workflow:
 
