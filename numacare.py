@@ -35,7 +35,7 @@ def get_db_url():
     if not password:
         raise ValueError("Database credentials missing!")
 
-    return f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
+    return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
 
 
 @st.cache_data(ttl=3600)  # Caches PostgreSQL query results for 1 hour
